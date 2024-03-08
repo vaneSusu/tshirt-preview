@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+        body {
+            padding-top: 50px;
+            /* overflow: hidden; */
+        }
+        .container {
+            position: relative;
+            z-index: 100;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            overflow: auto;
+        }
+
+        .wrapper {
+            padding: 10px;
+            border: 1px #ddd solid;
+        }
+
+        .img {
+            position: relative;
+            width: 200px;
+        }
+
+        .background {
+            width: 200px;
+        }
+
+        .target1,
+        .target2 {
+            position: absolute;
+            top: 39%;
+            left: 35%;
+            width: 60px;
+        }
+
+        .target2 {
+            left: 32%;
+        }
+        .upload-area {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .upload {
+            width: 100%;
+            height: 50px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #999;
+            cursor: pointer;
+            background-color: #fff;
+        }
+
+        .upload.active {
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+        .capture-btn {
+            position: relative;
+            z-index: 2000;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        .capture-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="./html2canvas.min.js"></script>
+</head>
+
+<body>
+    <div class="upload-area">
+        <div class="upload">拖拽文件到此处或点击上传</div>
+    </div>
+    <div class="container"></div>
+    <button class="capture-btn">截图</button>
+
+    <script>
+        console.log(html2canvas)
+        const uploadArea = document.querySelector('.upload-area');
+        const uploadBtn = document.querySelector('.upload')
+        const container = document.querySelector('.container');
+        const captureBtn = document.querySelector('.capture-btn');
+
+        uploadArea.addEventListener('dragover', handleDragOver, false);
+        uploadArea.addEventListener('dragleave', handleDragLeave, false);
+        uploadArea.addEventListener('drop', handleDrop, false);
+        uploadBtn.addEventListener('click', handleUpload, false);
+        captureBtn.addEventListener('click', captureImages, false);
+
+        function handleDragOver(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+            uploadArea.classList.add('active');
+        }
+
+        function handleDragLeave(event) {
+            uploadArea.classList.remove('active');
+        }
+
+        function handleDrop(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            uploadArea.classList.remove('active');
+            const files = event.dataTransfer.files;
+            handleFiles(files);
+        }
+
+        function handleUpload() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.multiple = true;
+            fileInput.accept = 'image/*';
+            fileInput.addEventListener('change', handleFileSelect, false);
+            fileInput.click();
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const wrapper = document.createElement('div');
+                    wrapper.classList.add('wrapper');
+                    wrapper.innerHTML = `
+                        <div class="img">
+                            <img src="./black.jpg" alt="" class="background">
+                            <img src="${reader.result}" alt="" class="target1">
+                        </div>
+                        <div class="img">
+                            <img src="./white.jpg" alt="" class="background">
+                            <img src="${reader.result}" alt="" class="target2">
+                        </div>
+                    `;
+                    container.appendChild(wrapper);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function captureImages() {
+            html2canvas(container, {useCORS: true}).then(canvas => {
+                // 将生成的 canvas 转换为图片
+                console.log(canvas);
+                document.body.append(canvas)
+                let img = document.createElement('img');
+                img.src = canvas.toDataURL('image/png');
+                // 将图片添加到页面中
+                document.body.appendChild(img);
+                document.body.removeChild(canvas)
+            });
+        }
+    </script>
+</body>
+
+</html>
